@@ -1,7 +1,8 @@
 from typing import Any
 
-from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from src.constants import Environment
 
 
 class CustomBaseSettings(BaseSettings):
@@ -15,18 +16,19 @@ class CustomBaseSettings(BaseSettings):
 class Config(CustomBaseSettings):
     DEBUG: bool = False
 
+    ENVIRONMENT: Environment = Environment.PRODUCTION
+
+    CORS_ORIGINS: list[str] = ["*"]
+    CORS_ORIGINS_REGEX: str | None = None
+    CORS_HEADERS: list[str] = ["*"]
+
     PATHAO_BASE_URL: str
     PATHAO_API_ACCESS_TOKEN: str
     REFRESH_PATHAO_API_ACCESS_TOKEN: str
     PATHAO_WEBHOOK_SECRET: str
     PATHAO_FRAUD_CHECKER_URL: str
 
-    @model_validator(mode="after")
-    def validate_sentry_non_local(self) -> "Config":
-        if self.ENVIRONMENT.is_deployed and not self.SENTRY_DSN:
-            raise ValueError("Sentry is not set")
-
-        return self
+    APP_VERSION: str = "0.1"
 
 
 settings = Config()
