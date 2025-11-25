@@ -31,3 +31,15 @@ class HTTP500(HTTPException):
         super().__init__(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=detail
         )
+
+
+class ValidationError(Exception):
+    """Custom exception for validation errors"""
+
+    pass
+
+
+class APIError(Exception):
+    """Custom exception for API-related errors"""
+
+    pass
