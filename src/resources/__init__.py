@@ -1,7 +1,11 @@
 from typing import TYPE_CHECKING
 
+from src.resources.cache import CacheManager
+
 if TYPE_CHECKING:
     from src.client import PathaoClient
+
+__all__ = ["CacheManager", "BaseResource"]
 
 
 class BaseResource:
