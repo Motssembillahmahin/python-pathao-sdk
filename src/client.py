@@ -10,11 +10,16 @@ class PathaoClient:
         self,
         client_id: str = None,
         client_secret: str = None,
+        username: str = None,
+        password: str = None,
         config: PathaoConfig = None,
     ):
         if config is None:
             config = PathaoConfig(
-                pathao_client_id=client_id, pathao_client_secret=client_secret
+                pathao_client_id=client_id,
+                pathao_client_secret=client_secret,
+                pathao_username=username,
+                pathao_password=password,
             )
 
         self.config = config
