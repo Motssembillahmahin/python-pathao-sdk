@@ -18,6 +18,8 @@ from src.resources.decorators import (
     log_execution,
     handle_errors,
     measure_time,
+    validate_not_empty,
+    sanitize_input,
 )
 from src.resources.schemas import StoreCreate, Store
 
@@ -57,7 +59,6 @@ class StoresResource(BaseResource):
             >>> store = await stores.create_store(store_data)
     """
 
-    # Class-level metadata
     __version__ = "1.0.0"
     __cache_ttl_days__ = 7  # Reference data cache duration
 
@@ -78,10 +79,7 @@ class StoresResource(BaseResource):
             Cache duration: 7 days (configurable via class attribute)
 
         Examples:
-            Development mode (in-memory):
-                >>> stores = StoresResource(client)
 
-            Production mode (persistent):
                 >>> stores = StoresResource(client, enable_persistent_cache=True)
         """
         super().__init__(client)
@@ -197,6 +195,8 @@ class StoresResource(BaseResource):
 
         return data["data"]["data"]
 
+    @validate_not_empty("city_name")
+    @sanitize_input("city_name")
     async def get_city_id(self, city_name: str) -> int:
         """
         Get city ID with intelligent caching and bulk prefetch optimization.
@@ -215,7 +215,7 @@ class StoresResource(BaseResource):
             city_name: Name of the city (case-insensitive)
 
         Returns:
-            Unique identifier of the city
+            Unique identifier (id) of the city
 
         Raises:
             ValidationError: If city not found after all lookup attempts
@@ -241,6 +241,8 @@ class StoresResource(BaseResource):
 
         raise ValidationError(f"City '{city_name}' does not exist in the system")
 
+    @validate_not_empty("zone_name")
+    @sanitize_input("zone_name")
     async def get_zone_id(self, city_id: int, zone_name: str) -> int:
         """
         Get zone ID with intelligent caching and bulk prefetch optimization.
@@ -281,13 +283,14 @@ class StoresResource(BaseResource):
             city_id, lambda: self._fetch_all_zones(city_id)
         )
 
-        # Try lookup again after prefetch
         zone_id = self.cache_manager.get_zone_id(city_id, zone_name)
         if zone_id:
             return zone_id
 
         raise ValidationError(f"Zone '{zone_name}' does not exist in city {city_id}")
 
+    @validate_not_empty("area_name")
+    @sanitize_input("area_name")
     async def get_area_id(self, zone_id: int, area_name: str) -> int:
         """
         Get area ID with intelligent caching and bulk prefetch optimization.
@@ -328,7 +331,6 @@ class StoresResource(BaseResource):
             zone_id, lambda: self._fetch_all_areas(zone_id)
         )
 
-        # Try lookup again after prefetch
         area_id = self.cache_manager.get_area_id(zone_id, area_name)
         if area_id:
             return area_id
@@ -497,7 +499,6 @@ class StoresResource(BaseResource):
             logger.debug(f"Fetching stores list (limit={limit or 'none'})")
             data = await self._request("GET", "/aladdin/api/v1/stores", params=params)
 
-            # Validate response structure
             if "data" not in data or "stores" not in data["data"]:
                 raise APIError("Invalid response structure from stores list endpoint")
 
