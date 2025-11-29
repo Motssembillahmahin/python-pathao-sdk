@@ -77,7 +77,6 @@ class PathaoConfig(BaseSettings):
         return self.pathao_environment == "sandbox"
 
 
-# Singleton instance
 _config_instance: Optional[PathaoConfig] = None
 
 
