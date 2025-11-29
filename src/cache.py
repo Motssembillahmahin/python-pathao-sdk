@@ -95,8 +95,8 @@ class PersistentCache(CacheBackend):
 
     def __init__(
         self,
-        storage_path: str = ".cache/store_cache.db",
-        default_ttl_seconds: int = 604800,  # 7 days
+        storage_path: str = ".cache/pathao.db",
+        default_ttl_seconds: int = 604800,
     ):
         """
         Initialize persistent cache with SQLite backend.
@@ -129,16 +129,36 @@ class PersistentCache(CacheBackend):
 
         with sqlite3.connect(db_path) as conn:
             conn.execute("""
-                CREATE TABLE IF NOT EXISTS cache_entries (
+                CREATE TABLE IF NOT EXISTS store_cache_entries (
                     key TEXT PRIMARY KEY,
                     value TEXT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     expires_at TIMESTAMP NOT NULL
                 )
             """)
+
+            conn.execute("""
+                            CREATE TABLE IF NOT EXISTS auth_tokens (
+                                client_id TEXT PRIMARY KEY,
+                                access_token TEXT NOT NULL,
+                                refresh_token TEXT,
+                                token_type TEXT DEFAULT 'Bearer',
+                                expires_at TIMESTAMP NOT NULL,
+                                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                            )
+                        """)
+
             conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_expiration ON cache_entries(expires_at)"
+                "CREATE INDEX IF NOT EXISTS idx_cache_expiration ON store_cache_entries(expires_at)"
             )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_token_expiration ON auth_tokens(expires_at)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_token_client ON auth_tokens(client_id)"
+            )
+
             conn.commit()
 
     def _get_connection(self):
@@ -161,7 +181,7 @@ class PersistentCache(CacheBackend):
         with self._get_connection() as conn:
             cursor = conn.execute(
                 """
-                SELECT value FROM cache_entries
+                SELECT value FROM store_cache_entries
                 WHERE key = ? AND expires_at > datetime('now')
                 """,
                 (key,),
@@ -190,7 +210,7 @@ class PersistentCache(CacheBackend):
         with self._get_connection() as conn:
             conn.execute(
                 """
-                INSERT OR REPLACE INTO cache_entries (key, value, expires_at)
+                INSERT OR REPLACE INTO store_cache_entries (key, value, expires_at)
                 VALUES (?, ?, ?)
                 """,
                 (key, json.dumps(value), expires_at),
@@ -207,7 +227,7 @@ class PersistentCache(CacheBackend):
             key: Cache key to delete
         """
         with self._get_connection() as conn:
-            conn.execute("DELETE FROM cache_entries WHERE key = ?", (key,))
+            conn.execute("DELETE FROM store_cache_entries WHERE key = ?", (key,))
             conn.commit()
 
         logger.debug(f"Cache DELETE: {key}")
@@ -215,7 +235,7 @@ class PersistentCache(CacheBackend):
     async def clear(self):
         """Remove all entries from cache."""
         with self._get_connection() as conn:
-            conn.execute("DELETE FROM cache_entries")
+            conn.execute("DELETE FROM store_cache_entries")
             conn.commit()
 
         logger.info("Cache cleared (all entries removed)")
@@ -233,13 +253,100 @@ class PersistentCache(CacheBackend):
         """
         with self._get_connection() as conn:
             cursor = conn.execute(
-                "DELETE FROM cache_entries WHERE expires_at <= datetime('now')"
+                "DELETE FROM store_cache_entries WHERE expires_at <= datetime('now')"
             )
             conn.commit()
             deleted = cursor.rowcount
 
             if deleted > 0:
                 logger.info(f"Cleaned up {deleted} expired cache entries")
+
+            return deleted
+
+    async def save_token(self, client_id: str, token_data: Dict) -> None:
+        """
+        Save authentication token for a client.
+
+        Args:
+            client_id: Unique client identifier
+            token_data: Token data including access_token, refresh_token, expires_at
+        """
+        with self._get_connection() as conn:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO auth_tokens
+                (client_id, access_token, refresh_token, token_type, expires_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, datetime('now'))
+            """,
+                (
+                    client_id,
+                    token_data["access_token"],
+                    token_data.get("refresh_token"),
+                    token_data.get("token_type", "Bearer"),
+                    token_data["expires_at"],
+                ),
+            )
+            conn.commit()
+
+        logger.debug(f"Token saved for client: {client_id}")
+
+    async def load_token(self, client_id: str) -> Optional[Dict]:
+        """
+        Load authentication token for a client.
+
+        Args:
+            client_id: Unique client identifier
+
+        Returns:
+            Token data if found and not expired, None otherwise
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                """
+                SELECT access_token, refresh_token, token_type, expires_at
+                FROM auth_tokens
+                WHERE client_id = ? AND expires_at > datetime('now')
+            """,
+                (client_id,),
+            )
+
+            result = cursor.fetchone()
+            if result:
+                logger.debug(f"Token loaded for client: {client_id}")
+                return {
+                    "access_token": result[0],
+                    "refresh_token": result[1],
+                    "token_type": result[2],
+                    "expires_at": result[3],
+                }
+
+            logger.debug(f"No valid token found for client: {client_id}")
+            return None
+
+    async def delete_token(self, client_id: str) -> None:
+        """Delete token for a specific client."""
+        with self._get_connection() as conn:
+            conn.execute("DELETE FROM auth_tokens WHERE client_id = ?", (client_id,))
+            conn.commit()
+
+        logger.debug(f"Token deleted for client: {client_id}")
+
+    async def cleanup_expired_tokens(self) -> int:
+        """
+        Remove expired tokens from database.
+
+        Returns:
+            Number of tokens removed
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "DELETE FROM auth_tokens WHERE expires_at <= datetime('now')"
+            )
+            conn.commit()
+            deleted = cursor.rowcount
+
+            if deleted > 0:
+                logger.info(f"Cleaned up {deleted} expired tokens")
 
             return deleted
 
