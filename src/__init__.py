@@ -1,7 +1,7 @@
 from src.auth import AuthManager
 from src.client import PathaoClient
 from src.exceptions import APIError, ValidationError
-from src.resources.cache import CacheBackend, CacheManager, PersistentCache
+from src.cache import CacheBackend, CacheManager, PersistentCache
 from src.resources.schemas import City, Store, StoreCreate
 from src.resources.stores import StoresResource
 

@@ -1,23 +1,7 @@
-from src.resources.cache import CacheBackend, CacheManager, PersistentCache
-from src.resources.schemas import City, Store, StoreCreate
-from src.resources.stores import StoresResource
-
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.client import PathaoClient
-
-__all__ = [
-    "CacheBackend",
-    "CacheManager",
-    "PersistentCache",
-    "BaseResource",
-    "City",
-    "Store",
-    "StoreCreate",
-    "StoresResource",
-]
 
 
 class BaseResource:
@@ -32,3 +16,19 @@ class BaseResource:
         response = await self._http.request(method, endpoint, **kwargs)
         response.raise_for_status()
         return response.json()
+
+
+from src.cache import CacheBackend, CacheManager, PersistentCache  # noqa: E402
+from src.resources.schemas import City, Store, StoreCreate  # noqa: E402
+from src.resources.stores import StoresResource  # noqa: E402
+
+__all__ = [
+    "BaseResource",
+    "CacheBackend",
+    "CacheManager",
+    "PersistentCache",
+    "City",
+    "Store",
+    "StoreCreate",
+    "StoresResource",
+]
