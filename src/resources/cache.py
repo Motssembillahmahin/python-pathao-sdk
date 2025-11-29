@@ -366,7 +366,6 @@ class CacheManager:
             logger.info(f"Loaded {len(cached)} zones for city {city_id} from cache")
             return cached
 
-        # Cache miss - fetch from API
         logger.info(f"Fetching all zones for city {city_id} from API (cache miss)...")
         zones_data = await fetch_func()
 
