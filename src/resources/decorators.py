@@ -103,7 +103,6 @@ def sanitize_input(*param_names: str):
             bound_args = sig.bind(*args, **kwargs)
             bound_args.apply_defaults()
 
-            # Sanitize specified parameters
             for param_name in param_names:
                 if param_name in bound_args.arguments:
                     value = bound_args.arguments[param_name]
