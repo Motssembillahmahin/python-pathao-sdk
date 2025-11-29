@@ -1,12 +1,38 @@
-[project]
-name = "fastapi-pathao-sdk"
-version = "0.1.0"
-description = "Add your description here"
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+name = "pathao-sdk"
+version = "1.0.0"
+description = "Pathao API SDK for Python"
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = [
-    "asyncio>=4.0.0",
-    "fastapi>=0.117.1",
-    "pydantic-settings>=2.10.1",
-    "uvicorn>=0.37.0",
+requires-python = ">=3.10"
+authors = [
+    {name = "Motassem Billah Mahin", email = "asmahin8@gmail.com"}
 ]
+keywords = ["pathao", "api", "sdk", "delivery", "logistics"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "pydantic>=2.0",
+    "httpx>=0.24",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Motssembillahmahin/python-pathao-sdk"
+Documentation = "https://github.com/Motssembillahmahin/python-pathao-sdk/blob/main/README.md"
+Repository = "https://github.com/Motssembillahmahin/python-pathao-sdk"
+Issues = "https://github.com/Motssembillahmahin/python-pathao-sdk/issues"

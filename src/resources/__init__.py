@@ -1,11 +1,23 @@
-from typing import TYPE_CHECKING
+from src.resources.cache import CacheBackend, CacheManager, PersistentCache
+from src.resources.schemas import City, Store, StoreCreate
+from src.resources.stores import StoresResource
 
-from src.resources.cache import CacheManager
+
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.client import PathaoClient
 
-__all__ = ["CacheManager", "BaseResource"]
+__all__ = [
+    "CacheBackend",
+    "CacheManager",
+    "PersistentCache",
+    "BaseResource",
+    "City",
+    "Store",
+    "StoreCreate",
+    "StoresResource",
+]
 
 
 class BaseResource:
