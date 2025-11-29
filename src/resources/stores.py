@@ -10,7 +10,7 @@ import logging
 
 from src.exceptions import ValidationError, APIError
 from src.resources import BaseResource
-from src.resources.cache import PersistentCache, CacheManager
+from src.cache import PersistentCache, CacheManager
 from src.resources.decorators import (
     cache_result,
     retry,
