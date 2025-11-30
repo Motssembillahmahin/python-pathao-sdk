@@ -1,17 +1,20 @@
-
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[project]
 name = "pathao-sdk"
 version = "1.0.0"
 description = "Pathao API SDK for Python"
 readme = "README.md"
 requires-python = ">=3.10"
+
 authors = [
-    {name = "Motassem Billah Mahin", email = "asmahin8@gmail.com"}
+    { name = "Motassem Billah Mahin", email = "asmahin8@gmail.com" }
 ]
+
 keywords = ["pathao", "api", "sdk", "delivery", "logistics"]
+
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -24,11 +27,6 @@ classifiers = [
 dependencies = [
     "pydantic>=2.0",
     "httpx>=0.24",
-]
-
-[project.optional-dependencies]
-dev = [
-
 ]
 
 [project.urls]
